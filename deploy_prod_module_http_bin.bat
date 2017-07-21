@@ -1,0 +1,1 @@
+python "C:\Program Files (x86)\Google\Cloud SDK\google-cloud-sdk\platform\google_appengine\appcfg.py" update module_http_bin -A mq-bi-data-surface --noauth_local_webserver -V1

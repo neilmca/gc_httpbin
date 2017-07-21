@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <link rel="stylesheet" type="text/css" href="/static/css/main.css"/>
+    <title>HttpBin</title>
+    <style>
+
+    
+      p.thick {
+          font-weight: bold;
+      }
+
+      p.label {
+        text-indent: 2em;
+      }
+
+      span.label {
+          font-weight: bold;
+          color: rgb(170, 170, 210)
+      }
+
+      /* DivTable.com */
+      .divTable{
+        display: table;
+        width: 100%;
+        table-layout:fixed;
+      }
+      .divTableRow {
+        display: table-row;
+      }
+      .divTableHeading {
+        background-color: #EEE;
+        display: table-header-group;
+      }
+      .divTableCell, .divTableHead {
+        border: 1px solid #999999;
+        display: table-cell;
+        padding: 3px 10px;
+      }
+      .divTableHeading {
+        font-weight: bold;
+        color: rgb(170, 170, 210)
+      }
+      .divTableFoot {
+        background-color: #EEE;
+        display: table-footer-group;
+        font-weight: bold;
+      }
+      .divTableBody {
+        display: table-row-group;
+      }
+
+    </style>
+
+
+
+  </head>
+  <body style="margin:20px;background-color: white;">
+
+  <p>Log of last {{number_returned}} recorded requests
+  {% for log in results %}
+    <p class="thick">{{log.ts}}
+    <p  class="label"><span class="label">Host Url:</span><span> {{log.host_url}}</span></p>
+    <p class="label"><span class="label">Path:</span><span> {{log.path}}</span></p>
+    <p class="label"><span class="label">Query Params:</span><span> {{log.query_params}}</span></p>
+    
+   
+    <div class="divTable" style="width: 90%;border: 1px solid #000; margin-left:40px; " >
+      <div class="divTableBody">
+        <div class="divTableRow">
+          <div class="divTableCell divTableHeading">Headers&nbsp;</div>
+          <div class="divTableCell divTableHeading">Body&nbsp;</div>
+        </div>
+        <div class="divTableRow">
+        <div class="divTableCell">
+          {% for f in log.headers %}
+            <p>{{f}}
+          {% endfor %}
+        </div>
+        <div class="divTableCell">{{log.body}}</div>
+        
+        </div>
+      </div>
+    </div>
+    
+
+
+  {% endfor %}
+  
+
+    
+
+   
+  </body>
+</html>
