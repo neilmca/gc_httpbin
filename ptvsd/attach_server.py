@@ -1,23 +1,24 @@
 # Python Tools for Visual Studio
 # Copyright(c) Microsoft Corporation
 # All rights reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the License); you may not use
 # this file except in compliance with the License. You may obtain a copy of the
 # License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
 # IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
 # MERCHANTABLITY OR NON-INFRINGEMENT.
-# 
+#
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
-__all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace', 'is_attached', 'AttachAlreadyEnabledError']
+__all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger',
+           'settrace', 'is_attached', 'AttachAlreadyEnabledError']
 
 import atexit
 import getpass
@@ -66,16 +67,16 @@ from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_stri
 #   (int64), and then the Python language version that the server is running represented by three int64s -
 #   major, minor, micro; From there on the socket is assumed to be using the normal PTVS debugging protocol.
 #   If attaching was not successful (which can happen if some other debugger is already attached), the server
-#   responds with 'RJCT' and closes the connection. 
+#   responds with 'RJCT' and closes the connection.
 #
 # 'REPL'
 #   Attach REPL to the process. If successful, the server responds with 'ACPT', and from there on the socket
 #   is assumed to be using the normal PTVS REPL protocol. If not successful (which can happen if there is
-#   no debugger attached), the server responds with 'RJCT' and closes the connection. 
+#   no debugger attached), the server responds with 'RJCT' and closes the connection.
 
 PTVS_VER = '2.2'
 DEFAULT_PORT = 5678
-PTVSDBG_VER = 6 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
+PTVSDBG_VER = 6  # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
 PTVSDBG = to_bytes('PTVSDBG')
 ACPT = to_bytes('ACPT')
 RJCT = to_bytes('RJCT')
@@ -92,7 +93,7 @@ class AttachAlreadyEnabledError(Exception):
     """`ptvsd.enable_attach` has already been called in this process."""
 
 
-def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, keyfile = None, redirect_output = True):
+def enable_attach(secret, address=('0.0.0.0', DEFAULT_PORT), certfile=None, keyfile=None, redirect_output=True):
     """Enables Visual Studio to attach to this process remotely to debug Python
     code.
 
@@ -144,7 +145,8 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
     """
 
     if not ssl and (certfile or keyfile):
-        raise ValueError('could not import the ssl module - SSL is not supported on this version of Python')
+        raise ValueError(
+            'could not import the ssl module - SSL is not supported on this version of Python')
 
     if sys.platform == 'cli':
         # Check that IronPython was launched with -X:Frames and -X:Tracing, since we can't register our trace
@@ -153,11 +155,13 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
         x_tracing = clr.GetCurrentRuntime().GetLanguageByExtension('py').Options.Tracing
         x_frames = clr.GetCurrentRuntime().GetLanguageByExtension('py').Options.Frames
         if not x_tracing or not x_frames:
-            raise RuntimeError('IronPython must be started with -X:Tracing and -X:Frames options to support PTVS remote debugging.')
+            raise RuntimeError(
+                'IronPython must be started with -X:Tracing and -X:Frames options to support PTVS remote debugging.')
 
     global _attach_enabled
     if _attach_enabled:
-        raise AttachAlreadyEnabledError('ptvsd.enable_attach() has already been called in this process.')
+        raise AttachAlreadyEnabledError(
+            'ptvsd.enable_attach() has already been called in this process.')
     _attach_enabled = True
 
     atexit.register(vspd.detach_process_and_notify_debugger)
@@ -166,6 +170,7 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(address)
     server.listen(1)
+
     def server_thread_func():
         while True:
             client = None
@@ -173,7 +178,8 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
             try:
                 client, addr = server.accept()
                 if certfile:
-                    client = ssl.wrap_socket(client, server_side = True, ssl_version = ssl.PROTOCOL_TLSv1, certfile = certfile, keyfile = keyfile)
+                    client = ssl.wrap_socket(
+                        client, server_side=True, ssl_version=ssl.PROTOCOL_TLSv1, certfile=certfile, keyfile=keyfile)
                 write_bytes(client, PTVSDBG)
                 write_int(client, PTVSDBG_VER)
 
@@ -230,14 +236,16 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                     except AttributeError:
                         pass
 
-                    version = '%s %s.%s.%s (%s)' % (impl, major, minor, micro, os_and_arch)
+                    version = '%s %s.%s.%s (%s)' % (
+                        impl, major, minor, micro, os_and_arch)
                     write_string(client, version)
 
                     # Don't just drop the connection - let the debugger close it after it finishes reading.
                     client.recv(1)
 
                 elif response == ATCH:
-                    debug_options = vspd.parse_debug_options(read_string(client))
+                    debug_options = vspd.parse_debug_options(
+                        read_string(client))
                     if redirect_output:
                         debug_options.add('RedirectOutput')
 
@@ -254,8 +262,10 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                         write_int(client, minor)
                         write_int(client, micro)
 
-                        vspd.attach_process_from_socket(client, debug_options, report = True)
-                        vspd.mark_all_threads_for_break(vspd.STEPPING_ATTACH_BREAK)
+                        vspd.attach_process_from_socket(
+                            client, debug_options, report=True)
+                        vspd.mark_all_threads_for_break(
+                            vspd.STEPPING_ATTACH_BREAK)
                         _attached.set()
                         client = None
                     else:
@@ -275,7 +285,7 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                 if client is not None:
                     client.close()
 
-    server_thread = threading.Thread(target = server_thread_func)
+    server_thread = threading.Thread(target=server_thread_func)
     server_thread.setDaemon(True)
     server_thread.start()
 
@@ -290,19 +300,20 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
     cur_thread = vspd.new_thread()
     for f in frames:
         cur_thread.push_frame(f)
+
     def replace_trace_func():
         for f in frames:
             f.f_trace = cur_thread.trace_func
     replace_trace_func()
     sys.settrace(cur_thread.trace_func)
-    vspd.intercept_threads(for_attach = True)
+    vspd.intercept_threads(for_attach=True)
 
 
 # Alias for convenience of users of pydevd
 settrace = enable_attach
 
 
-def wait_for_attach(timeout = None):
+def wait_for_attach(timeout=None):
     """If a PTVS remote debugger is attached, returns immediately. Otherwise,
     blocks until a remote debugger attaches to this process, or until the
     optional timeout occurs.
@@ -324,6 +335,7 @@ def break_into_debugger():
     if not vspd.DETACHED:
         vspd.SEND_BREAK_COMPLETE = thread.get_ident()
         vspd.mark_all_threads_for_break()
+
 
 def is_attached():
     """Returns ``True`` if debugger is attached, ``False`` otherwise."""
